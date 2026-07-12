@@ -1,258 +1,180 @@
 import streamlit as st
+import time
 
-# Setup Konfigurasi Halaman
-st.set_page_config(page_title="Kereta Uang", page_icon="🚂", layout="centered")
+# 1. Konfigurasi Halaman & CSS Khusus (Tema POV Masinis)
+st.set_page_config(page_title="Kereta Uang POV", page_icon="🚂", layout="centered")
 
-# CSS Khusus untuk Tampilan Item dan Uang
-st.markdown('''
+st.markdown("""
 <style>
-.uang-kotak {
-    display: inline-block;
-    border: 2px solid #2e7d32;
-    border-radius: 8px;
-    padding: 8px 12px;
-    margin: 4px;
-    background-color: #e8f5e9;
-    color: #1b5e20;
-    font-weight: 900;
-    font-size: 16px;
-    text-align: center;
-    box-shadow: 2px 2px 0px #2e7d32;
-}
-.item-card {
-    text-align: center;
-    border: 3px dashed #1976d2;
-    border-radius: 15px;
-    padding: 20px;
-    background-color: #e3f2fd;
-    margin-bottom: 20px;
-}
-.item-icon { font-size: 80px; line-height: 1; margin-bottom: 10px; }
-.item-title { font-size: 22px; font-weight: bold; color: #1565c0; }
-.item-price { font-size: 20px; color: #d32f2f; font-weight: bold; margin-top: 5px; }
-.qty-badge { background-color: #ff9800; color: white; padding: 5px 10px; border-radius: 20px; font-weight: bold; display: inline-block; margin-top: 10px; }
-.cerita-box { background-color: #fff3e0; padding: 15px; border-left: 5px solid #ff9800; margin-bottom: 15px; font-size: 16px; }
-</style>
-''', unsafe_allow_html=True)
-
-# Fungsi Pemecah Nominal Uang
-def get_pecahan(jumlah):
-    pecahan = [10000, 5000, 2000, 1000, 500, 200, 100]
-    hasil = []
-    sisa = jumlah
-    for p in pecahan:
-        while sisa >= p:
-            hasil.append(p)
-            sisa -= p
-    return hasil
-
-# Fungsi Render HTML untuk Uang
-def render_uang_html(jumlah):
-    if jumlah == 0:
-        return "<div style='font-size:18px; font-weight:bold; color:#d32f2f;'>Saldo Habis (Rp0)</div>"
-    pecahan_list = get_pecahan(jumlah)
-    html = "<div>"
-    for p in pecahan_list:
-        html += f"<div class='uang-kotak'>Rp {p:,}</div>"
-    html += "</div>"
-    return html
-
-# Fungsi Render HTML untuk Item
-def render_item_html(icon, nama, harga, qty):
-    return f'''
-    <div class='item-card'>
-        <div class='item-icon'>{icon}</div>
-        <div class='item-title'>{nama}</div>
-        <div class='item-price'>Harga: Rp {harga:,} / pcs</div>
-        <div class='qty-badge'>Beli Paket: {qty} pcs</div>
-    </div>
-    '''
-
-# Manajemen Status Sesi (Session State)
-if 'tahap' not in st.session_state:
-    st.session_state.tahap = 'input_nama'
-    st.session_state.saldo = 20000
-    st.session_state.gerbong_saat_ini = 0
-    st.session_state.nama_tim = ""
-    st.session_state.inventaris = [] # Menyimpan riwayat barang yang dibeli
-
-# Data Gerbong Baru (Penuh Cerita Urgen)
-GERBONG_DATA = [
-    {
-        "gerbong": 1, 
-        "nama_toko": "Bengkel Stasiun", 
-        "cerita": "Waduh! Ban sepeda salah satu teman kalian bocor di parkiran stasiun. Kalian butuh memompa ban, tapi tukang pompa memberikan harga paketan.",
-        "barang": "Jasa Pompa Ban", "icon": "🚲", "harga": 2000, "qty": 2
-    },
-    {
-        "gerbong": 2, 
-        "nama_toko": "Koperasi Sekolah", 
-        "cerita": "Gawat! Pulpen kalian hilang semua, padahal nanti ada ulangan matematika. Kalau tidak beli, kalian tidak bisa ikut ujian.",
-        "barang": "Pulpen Hitam", "icon": "🖊️", "harga": 1500, "qty": 3
-    },
-    {
-        "gerbong": 3, 
-        "nama_toko": "Kantin Gerbong", 
-        "cerita": "Perut keroncongan banget setelah lelah menghitung. Ada penjual gorengan lewat menawarkan paket hemat pengganjal perut.",
-        "barang": "Gorengan Hangat", "icon": "🥟", "harga": 1000, "qty": 5
-    },
-    {
-        "gerbong": 4, 
-        "nama_toko": "Toko Kado", 
-        "cerita": "Kalian baru ingat kalau hari ini ibu wali kelas ulang tahun! Ada hadiah bagus untuk diberikan secara patungan.",
-        "barang": "Kado Buku Catatan", "icon": "🎁", "harga": 3000, "qty": 2
-    },
-    {
-        "gerbong": 5, 
-        "nama_toko": "Konter Keliling", 
-        "cerita": "Kuota internet kalian mendadak habis, padahal kalian butuh memesan ojek online saat tiba di stasiun akhir nanti.",
-        "barang": "Voucher Kuota", "icon": "📱", "harga": 4000, "qty": 2
+    /* Latar belakang keseluruhan */
+    .stApp { background-color: #87CEEB; } /* Warna Langit */
+    
+    /* Area Jendela POV (Tempat GIF/Gambar) */
+    .pov-window {
+        background-color: #228B22; /* Warna Tanah (Placeholder) */
+        border: 10px solid #2F4F4F;
+        border-radius: 20px 20px 0 0;
+        height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px #000000;
+        margin-bottom: -20px;
     }
+    
+    /* Area Dasbor Masinis (Hitam/Gelap) */
+    .dashboard-panel {
+        background-color: #2C3E50;
+        padding: 30px;
+        border-radius: 0 0 20px 20px;
+        color: white;
+        box-shadow: 0px -5px 15px rgba(0,0,0,0.5);
+    }
+    
+    /* Kotak Pop-up Pertanyaan */
+    .popup-box {
+        background-color: #FFFACD;
+        border: 4px solid #000000;
+        border-radius: 15px;
+        padding: 20px;
+        color: #000000;
+        text-align: center;
+        box-shadow: 5px 5px 0px #000000;
+        margin-bottom: 20px;
+    }
+    
+    /* Tampilan Layar Digital Dasbor */
+    .digital-screen {
+        background-color: #000000;
+        color: #00FF00;
+        font-family: 'Courier New', Courier, monospace;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        border: 2px solid #555;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# 2. Manajemen Status Sesi (Session State)
+if 'tahap' not in st.session_state:
+    st.session_state.tahap = 'mulai'
+    st.session_state.saldo = 20000
+    st.session_state.pos_saat_ini = 0
+    st.session_state.inventaris = []
+
+# Data Pos (Pertanyaan & Hitungan)
+DATA_POS = [
+    {"pos": 1, "masalah": "Ban sepeda bocor!", "barang": "Pompa", "harga": 2000, "qty": 1},
+    {"pos": 2, "masalah": "Buku hilang sebelum ujian!", "barang": "Buku Tulis", "harga": 3000, "qty": 2},
+    {"pos": 3, "masalah": "Perut sangat lapar!", "barang": "Roti", "harga": 1500, "qty": 3},
 ]
 
-st.title("🚂 Game Kereta Uang 🚂")
-st.markdown("---")
+# 3. Logika Antarmuka (UI)
+if st.session_state.tahap == 'mulai':
+    st.markdown("<div class='pov-window'>🚂 KERETA UANG SIAP BERANGKAT 🚂</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class='dashboard-panel'>
+        <h2 style='text-align:center;'>Sistem Dinyalakan</h2>
+        <p style='text-align:center;'>Bawa kereta sampai stasiun akhir dengan saldo tersisa. Semakin besar saldo, semakin banyak hadiah Superstar!</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("Mulai Perjalanan (Tarik Tuas)", use_container_width=True):
+        st.session_state.tahap = 'perjalanan'
+        st.rerun()
 
-# FASE 1: Input Nama
-if st.session_state.tahap == 'input_nama':
-    st.subheader("Persiapan Keberangkatan")
-    st.write("Kelola uang kelompok kalian agar tidak habis (Rp0) sebelum mencapai stasiun akhir.")
-    nama = st.text_input("Masukkan nama kelompok kalian:")
+elif st.session_state.tahap == 'perjalanan':
+    idx = st.session_state.pos_saat_ini
+    data = DATA_POS[idx]
+    total_harga = data['harga'] * data['qty']
     
-    if st.button("Mulai Petualangan"):
-        if nama:
-            st.session_state.nama_tim = nama
-            st.session_state.tahap = 'hitung_perkalian'
-            st.rerun()
-        else:
-            st.warning("Nama tim wajib diisi!")
-
-# FASE 2: Perjalanan Gerbong
-elif st.session_state.tahap in ['hitung_perkalian', 'keputusan_beli', 'hitung_pengurangan']:
-    idx = st.session_state.gerbong_saat_ini
-    data = GERBONG_DATA[idx]
-    total_harga_asli = data['harga'] * data['qty']
+    # Visual Jendela (Bisa diganti dengan st.image untuk GIF POV Kereta)
+    st.markdown(f"<div class='pov-window'>Melintasi Pos {data['pos']}...</div>", unsafe_allow_html=True)
     
-    st.subheader(f"🚂 Gerbong {data['gerbong']}: {data['nama_toko']}")
+    # Area Dasbor
+    st.markdown("<div class='dashboard-panel'>", unsafe_allow_html=True)
     
-    # Menampilkan Cerita Konteks
-    st.markdown(f"<div class='cerita-box'><b>Kondisi:</b> {data['cerita']}</div>", unsafe_allow_html=True)
+    # Layar Status Saldo
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"<div class='digital-screen'>SALDO: Rp {st.session_state.saldo:,}</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"<div class='digital-screen'>POS: {data['pos']} / {len(DATA_POS)}</div>", unsafe_allow_html=True)
     
-    # Tampilan Saldo dengan Visual Pecahan Uang
-    st.markdown("### 💰 Dompet Kalian Saat Ini:")
-    st.markdown(render_uang_html(st.session_state.saldo), unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.write("---")
     
-    # Tampilan Barang dengan Visual Card
-    st.markdown(render_item_html(data['icon'], data['barang'], data['harga'], data['qty']), unsafe_allow_html=True)
+    # Kotak Pop Up Masalah (Tengah Dasbor)
+    st.markdown(f"""
+    <div class='popup-box'>
+        <h3>🚨 PERINGATAN!</h3>
+        <p style='font-size: 18px;'><b>{data['masalah']}</b></p>
+        <p>Beli {data['qty']} <b>{data['barang']}</b> (Harga: Rp {data['harga']}/pcs)?</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Lapis 1: Hitung Perkalian
-    if st.session_state.tahap == 'hitung_perkalian':
-        st.info("Hitung total harga paket di atas untuk membuka pilihan keputusan.")
-        tebakan_harga = st.number_input("Total harga (Rp):", min_value=0, step=100)
-        
-        if st.button("Kunci Jawaban"):
-            if tebakan_harga == total_harga_asli:
-                st.success("✅ Benar! Silakan ambil keputusan.")
-                st.session_state.tahap = 'keputusan_beli'
-                st.rerun()
-            else:
-                st.error("❌ Hitungan salah! Coba periksa lagi perkaliannya.")
-                
-    # Lapis 2: Keputusan Beli / Lewati
-    elif st.session_state.tahap == 'keputusan_beli':
-        st.success(f"Harga Total: **Rp {total_harga_asli:,}**")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🛒 BELI BARANG INI", use_container_width=True):
-                if st.session_state.saldo < total_harga_asli:
-                    st.error("⚠️ Uang tidak cukup! Terpaksa lewati.")
-                else:
-                    st.session_state.tahap = 'hitung_pengurangan'
+    # Hitungan Matematika
+    st.write(f"Hitung total harga {data['qty']} {data['barang']}:")
+    jawaban_harga = st.number_input("Total Harga (Rp)", min_value=0, step=500, key=f"hitung_{idx}")
+    
+    if jawaban_harga > 0:
+        if jawaban_harga == total_harga:
+            st.success("✅ Hitungan Benar! Pilih tindakan:")
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("🔴 BELI (Potong Saldo)", use_container_width=True):
+                    if st.session_state.saldo >= total_harga:
+                        st.session_state.saldo -= total_harga
+                        st.session_state.inventaris.append(data['barang'])
+                        st.session_state.tahap = 'evaluasi_pos'
+                        st.rerun()
+                    else:
+                        st.error("Saldo tidak cukup!")
+            with c2:
+                if st.button("🟢 LEWATI (Simpan Uang)", use_container_width=True):
+                    st.session_state.tahap = 'evaluasi_pos'
                     st.rerun()
-        with col2:
-            if st.button("⏭️ LEWATI SAJA", use_container_width=True):
-                if st.session_state.gerbong_saat_ini < len(GERBONG_DATA) - 1:
-                    st.session_state.gerbong_saat_ini += 1
-                    st.session_state.tahap = 'hitung_perkalian'
-                else:
-                    st.session_state.tahap = 'finish'
-                st.rerun()
-                
-    # Lapis 3: Hitung Kembalian / Pengurangan
-    elif st.session_state.tahap == 'hitung_pengurangan':
-        sisa_saldo_asli = st.session_state.saldo - total_harga_asli
-        
-        st.warning("Hitung sisa uang kalian sebelum membayar ke kasir.")
-        
-        col_a, col_b = st.columns(2)
-        with col_a:
-            st.write("**Uang Saat Ini:**")
-            st.markdown(render_uang_html(st.session_state.saldo), unsafe_allow_html=True)
-        with col_b:
-            st.write("**Uang yang Dibayarkan:**")
-            st.markdown(render_uang_html(total_harga_asli), unsafe_allow_html=True)
+        else:
+            st.error("❌ Hitungan salah! Coba lagi.")
             
-        tebakan_saldo = st.number_input("Berapa sisa uang kalian sekarang?", min_value=0, step=100)
-        
-        if st.button("Bayar & Lanjut"):
-            if tebakan_saldo == sisa_saldo_asli:
-                st.success("✅ Hitungan tepat! Transaksi berhasil.")
-                st.session_state.saldo = sisa_saldo_asli
-                # Masukkan ke daftar inventaris
-                st.session_state.inventaris.append(f"{data['icon']} {data['barang']} ({data['qty']} pcs)")
-                
-                # Cek Kondisi Game Over
-                if st.session_state.saldo <= 0:
-                    st.session_state.tahap = 'game_over'
-                elif st.session_state.gerbong_saat_ini < len(GERBONG_DATA) - 1:
-                    st.session_state.gerbong_saat_ini += 1
-                    st.session_state.tahap = 'hitung_perkalian'
-                else:
-                    st.session_state.tahap = 'finish'
-                st.rerun()
-            else:
-                st.error("❌ Hitungan sisa uang salah! Coba kurangi dengan teliti.")
+    st.markdown("</div>", unsafe_allow_html=True) # Tutup Dasbor
 
-# FASE GAME OVER (Uang Habis)
-elif st.session_state.tahap == 'game_over':
-    st.error("💀 GAME OVER! 💀")
-    st.header("HABIS!")
-    st.write(f"Yaaah, **Kelompok {st.session_state.nama_tim}** kehabisan uang di tengah jalan 🥲")
-    st.write("Uang kalian saat ini mencapai **Rp0**. Kalian tidak bisa melanjutkan perjalanan.")
-    
-    st.markdown("### 🛒 Barang yang sempat terbeli:")
-    if len(st.session_state.inventaris) > 0:
-        for item in st.session_state.inventaris:
-            st.write(f"- {item}")
+elif st.session_state.tahap == 'evaluasi_pos':
+    if st.session_state.pos_saat_ini < len(DATA_POS) - 1:
+        st.session_state.pos_saat_ini += 1
+        st.session_state.tahap = 'perjalanan'
     else:
-        st.write("- Belum membeli apa-apa.")
-        
-    if st.button("Main Lagi dari Awal"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+        st.session_state.tahap = 'akhir'
+    st.rerun()
 
-# FASE 3: Akhir Perjalanan (Berhasil Selamat)
-elif st.session_state.tahap == 'finish':
+elif st.session_state.tahap == 'akhir':
     st.balloons()
-    st.header("🏁 STASIUN AKHIR 🏁")
-    st.write(f"Selamat, **Kelompok {st.session_state.nama_tim}** telah menyelesaikan perjalanan!")
+    st.markdown("<div class='pov-window'>🏁 STASIUN AKHIR 🏁</div>", unsafe_allow_html=True)
     
-    st.markdown("### 💰 SISA UANG KALIAN:")
-    st.markdown(render_uang_html(st.session_state.saldo), unsafe_allow_html=True)
-    
-    st.markdown("### 🛒 Daftar Belanjaan Kalian:")
-    if len(st.session_state.inventaris) > 0:
-        for item in st.session_state.inventaris:
-            st.write(f"- {item}")
+    saldo_akhir = st.session_state.saldo
+    if saldo_akhir >= 10000:
+        superstar = 10
+    elif saldo_akhir >= 5000:
+        superstar = 5
+    elif saldo_akhir >= 1000:
+        superstar = 2
     else:
-        st.write("- *Wow! Kalian super hemat dan tidak membeli apa pun.*")
+        superstar = 0
+        
+    st.markdown(f"""
+    <div class='dashboard-panel'>
+        <h2 style='text-align:center;'>Laporan Perjalanan</h2>
+        <div class='digital-screen' style='font-size:24px; margin-bottom:20px;'>SISA SALDO: Rp {saldo_akhir:,}</div>
+        <div class='popup-box' style='background-color:#E8F8F5;'>
+            <h3 style='color:#2E86C1;'>🎁 HADIAH: {superstar} SUPERSTAR 🎁</h3>
+        </div>
+        <p><b>Barang Dibeli:</b> {', '.join(st.session_state.inventaris) if st.session_state.inventaris else 'Tidak ada'}</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    st.info("Silakan lapor ke Guru kalian untuk membandingkan sisa uang dan daftar barang dengan kelompok lain.")
-    
-    if st.button("Main Lagi dari Awal"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
+    if st.button("Main Lagi"):
+        st.session_state.clear()
         st.rerun()
+    
