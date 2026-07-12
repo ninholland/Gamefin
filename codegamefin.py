@@ -2,17 +2,17 @@ import streamlit as st
 import time
 import random
 
-# 1. Pengaturan Halaman & Desain Visual Full Warna-Warni
+# 1. Pengaturan Halaman & Desain Visual (Latar Belakang Biru Cerah & Teks Besar)
 st.set_page_config(page_title="Tebak Kilat Kebutuhan vs Keinginan", page_icon="⚡", layout="centered")
 
 st.markdown("""
 <style>
-    /* Latar belakang cerah penuh energi */
-    .stApp { background-color: #FFDE59; } 
+    /* Latar belakang diganti jadi Biru Cerah Kartun */
+    .stApp { background-color: #70D6FF; } 
     
     /* Desain Beranda Awal */
     .welcome-card {
-        background-color: #FF5757;
+        background-color: #FF70A6;
         border: 6px solid #000000;
         border-radius: 20px;
         padding: 30px;
@@ -22,21 +22,33 @@ st.markdown("""
         margin-bottom: 25px;
     }
     
-    /* Kotak Wadah Barang */
-    .display-box {
+    /* Kotak Input Nama Kelompok & Nama Barang yang Diperbesar */
+    .input-container {
         background-color: #FFFFFF;
         border: 6px solid #000000;
         border-radius: 20px;
-        padding: 40px;
-        text-align: center;
+        padding: 30px;
         box-shadow: 8px 8px 0px #000000;
         margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    /* Modifikasi kolom teks bawaan Streamlit agar tulisannya raksasa */
+    div.stTextInput > div > div > input {
+        font-size: 30px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        height: 70px !important;
+        border: 4px solid #000000 !important;
+        border-radius: 10px !important;
+        background-color: #FFF !important;
+        color: #000000 !important;
     }
     
     .nama-barang {
         font-size: 45px;
         font-weight: bold;
-        color: #FF5757;
+        color: #FF70A6;
         text-transform: uppercase;
         margin: 20px 0;
     }
@@ -46,7 +58,7 @@ st.markdown("""
         background-color: #000000;
         color: #00FF00;
         font-family: 'Courier New', monospace;
-        font-size: 30px;
+        font-size: 32px;
         padding: 10px;
         border-radius: 10px;
         text-align: center;
@@ -87,7 +99,6 @@ KUMPULAN_BARANG = [
     {"nama": "🧦 Kaos Kaki Polos", "jenis": "Kebutuhan"},
 ]
 
-# Inisialisasi Session State
 if 'game_stage' not in st.session_state:
     st.session_state.game_stage = 'home'
     st.session_state.nama_kelompok = ""
@@ -95,7 +106,7 @@ if 'game_stage' not in st.session_state:
     st.session_state.barang_sekarang = None
     st.session_state.waktu_mulai = None
     st.session_state.barang_tersisa = []
-    st.session_state.list_jawaban = [] # Menyimpan riwayat barang yang sudah dilewati
+    st.session_state.list_jawaban = []
 
 # 3. Alur Tampilan Game
 
@@ -105,13 +116,13 @@ if st.session_state.game_stage == 'home':
     <div class='welcome-card'>
         <h1>👋 HALO ANAK-ANAK HEBAT! 👋</h1>
         <p style='font-size: 20px;'>Selamat datang di Game Tebak Kilat ⚡</p>
-        <h3 style='color: #FFDE59;'>🎮 KEBUTUHAN VS KEINGINAN 🎮</h3>
+        <h3 style='color: #EFFF96;'>🎮 KEBUTUHAN VS KEINGINAN 🎮</h3>
     </div>
     """, unsafe_allow_html=True)
     
-    # Input Nama Kelompok
-    st.markdown("<div class='display-box'>", unsafe_allow_html=True)
-    nama_input = st.text_input("✍️ Masukkan Nama Kelompok Kasih di Sini:", placeholder="Contoh: Kelompok Harimau 🐯")
+    # Memasukkan kolom mengetik langsung di dalam wadah kotak putih besar
+    st.markdown("<div class='input-container'><p style='font-size: 22px; font-weight: bold; color: black; margin-bottom: 5px;'>✍️ KETIK NAMA KELOMPOK DI SINI:</p>", unsafe_allow_html=True)
+    nama_input = st.text_input("", placeholder="Contoh: KELOMPOK 1 🐯", label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
     
     if st.button("🚀 MULAI GAME SEKARANG", use_container_width=True, type="primary"):
@@ -126,7 +137,7 @@ if st.session_state.game_stage == 'home':
             st.session_state.barang_sekarang = st.session_state.barang_tersisa.pop()
             st.rerun()
         else:
-            st.error("⚠️ Nama kelompok tidak boleh kosong ya!")
+            st.error("⚠️ Nama kelompok diisi dulu ya, Kasih!")
 
 # --- HALAMAN SAAT GAME BERJALAN ---
 elif st.session_state.game_stage == 'playing':
@@ -137,7 +148,6 @@ elif st.session_state.game_stage == 'playing':
         st.session_state.game_stage = 'scoring'
         st.rerun()
     else:
-        # Papan Status Kelompok, Skor, dan Waktu
         st.markdown(f"<h2 style='text-align:center; color:black;'>🔥 KELOMPOK: {st.session_state.nama_kelompok} 🔥</h2>", unsafe_allow_html=True)
         
         c1, c2 = st.columns(2)
@@ -148,24 +158,23 @@ elif st.session_state.game_stage == 'playing':
             
         # Kolom Tampilan Nama Barang
         st.markdown(f"""
-        <div class='display-box'>
+        <div class='input-container'>
             <p style='color: #555; font-size: 20px; font-weight: bold;'>📦 NAMA BARANG:</p>
             <div class='nama-barang'>{st.session_state.barang_sekarang['nama']}</div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Kolom Pilihan Tombol Tindakan
+        # Kolom Pilihan Tombol Kebutuhan / Keinginan
         st.markdown("<h3 style='text-align:center; color:black;'>PILIH KATEGORI:</h3>", unsafe_allow_html=True)
         col_tombol_1, col_tombol_2 = st.columns(2)
         
         with col_tombol_1:
             if st.button("👍 KEBUTUHAN", use_container_width=True, type="primary"):
                 status_benar = (st.session_state.barang_sekarang['jenis'] == "Kebutuhan")
-                poin_dapat = 100 if status_benar else -50
-                st.session_state.skor += poin_dapat
+                st.session_state.skor += 100 if status_benar else -50
                 
-                # Catat ke list riwayat
-                st.session_state.list_jawaban.append(f"{st.session_state.barang_sekarang['nama']} -> Pilih: Kebutuhan ({'✅ Benar' if status_benar else '❌ Salah'})")
+                # Hanya memasukkan nama barang saja ke dalam list riwayat (Tanpa status Benar/Salah)
+                st.session_state.list_jawaban.append(f"{st.session_state.barang_sekarang['nama']}")
                 
                 if st.session_state.barang_tersisa:
                     st.session_state.barang_sekarang = st.session_state.barang_tersisa.pop()
@@ -176,11 +185,10 @@ elif st.session_state.game_stage == 'playing':
         with col_tombol_2:
             if st.button("🛍️ KEINGINAN", use_container_width=True):
                 status_benar = (st.session_state.barang_sekarang['jenis'] == "Keinginan")
-                poin_dapat = 100 if status_benar else -50
-                st.session_state.skor += poin_dapat
+                st.session_state.skor += 100 if status_benar else -50
                 
-                # Catat ke list riwayat
-                st.session_state.list_jawaban.append(f"{st.session_state.barang_sekarang['nama']} -> Pilih: Keinginan ({'✅ Benar' if status_benar else '❌ Salah'})")
+                # Hanya memasukkan nama barang saja ke dalam list riwayat (Tanpa status Benar/Salah)
+                st.session_state.list_jawaban.append(f"{st.session_state.barang_sekarang['nama']}")
                 
                 if st.session_state.barang_tersisa:
                     st.session_state.barang_sekarang = st.session_state.barang_tersisa.pop()
@@ -188,55 +196,44 @@ elif st.session_state.game_stage == 'playing':
                     st.session_state.barang_sekarang = None
                 st.rerun()
         
-        # Kolom List Barang Yang Sudah Ditebak
+        # Kolom List Murni Barang yang Sudah Dilewati
         if st.session_state.list_jawaban:
-            st.markdown("<br><h4 style='color:black;'>📋 List Barang Yang Sudah Diisi:</h4>", unsafe_allow_html=True)
+            st.markdown("<br><h4 style='color:black;'>📋 List Barang yang Sudah Muncul:</h4>", unsafe_allow_html=True)
             for item in reversed(st.session_state.list_jawaban):
-                st.write(item)
+                st.markdown(f"<div style='background-color:white; padding:10px; border:2px solid black; border-radius:5px; margin-bottom:5px; font-weight:bold; color:black;'>{item}</div>", unsafe_allow_html=True)
                 
         time.sleep(1)
         st.rerun()
 
-# --- HALAMAN HITUNG SKOR AKHIR (ANIMASI ANIMATED COUNT UP) ---
+# --- HALAMAN HITUNG SKOR AKHIR ---
 elif st.session_state.game_stage == 'scoring':
     st.markdown(f"<h2 style='text-align:center; color:black;'>🎉 SESI {st.session_state.nama_kelompok} SELESAI 🎉</h2>", unsafe_allow_html=True)
     
-    # Elemen kosong tunggal untuk wadah angka animasi
     wadah_skor_animasi = st.empty()
     skor_target = st.session_state.skor
     
-    # Mekanisme Animasi Hitung Angka (Count-up dari 0 ke target)
     if skor_target > 0:
-        langkah = max(10, skor_target // 20)  # Menentukan kecepatan lompatan angka
+        langkah = max(10, skor_target // 20)
         for angka_skor in range(0, skor_target + 1, langkah):
             wadah_skor_animasi.markdown(f"<div class='final-score-box'>🔢 {angka_skor}</div>", unsafe_allow_html=True)
             time.sleep(0.04)
     elif skor_target < 0:
-        # Jika skor minus, hitung mundur ke bawah
         langkah = min(-10, skor_target // 20)
         for angka_skor in range(0, skor_target - 1, langkah):
             wadah_skor_animasi.markdown(f"<div class='final-score-box'>🔢 {angka_skor}</div>", unsafe_allow_html=True)
             time.sleep(0.04)
             
-    # Mengunci tampilan angka pada skor mutlak terakhir
     wadah_skor_animasi.markdown(f"<div class='final-score-box'>✨ {skor_target} POIN ✨</div>", unsafe_allow_html=True)
-    
-    # Munculkan Balon Selebrasi
     st.balloons()
     
-    # Teks Hasil Akhir
-    st.markdown(f"""
+    st.markdown("""
     <div class='welcome-card' style='background-color: #2E86C1;'>
         <h2>🎈 YEY SKOR KAMU LUAR BIASA! 🎈</h2>
-        <p style='font-size: 18px;'>Kerja bagus Kelompok <b>{st.session_state.nama_kelompok}</b>!</p>
+        <p style='font-size: 18px;'>Pertahankan kerja keras kalian! 💪</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Menampilkan total riwayat akhir barang untuk bahan evaluasi Kasih di kelas
-    with st.expander("🔍 Lihat Hasil Detil Pemilahan Barang"):
-        for item in st.session_state.list_jawaban:
-            st.write(item)
-            
     if st.button("🔄 KEMBALI KE BERANDA (KELOMPOK BARU)", use_container_width=True):
         st.session_state.game_stage = 'home'
         st.rerun()
+                
